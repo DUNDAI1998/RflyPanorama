@@ -1,9 +1,9 @@
-# Fisheye to Panorama with RflySim: Multi-Fisheye Image Stitching for Panoramic Vision
+# RflyPano: A Virtual UAV Localization Panoramic Dataset from RflySim
 
 This repository provides:
 
-- A panoramic dataset for UAV global localization
 - A Python script to stitch four fisheye camera images into a seamless panoramic image based on polynomial fisheye distortion modeling and equirectangular projection.
+- Panoramic datasets and fisheye datasets for UAV global localization
 
 The dataset and images are generated from a virtual environment using **RflySim (version 3.07 full edition)**.
 
