@@ -1,6 +1,16 @@
 # Fisheye to Panorama with RflySim: Multi-Fisheye Image Stitching for Panoramic Vision
 
-This repository provides a Panoramic dataset for UAV localization and a Python script to stitch four fisheye camera images into a seamless image, based on polynomial fisheye distortion modeling and equirectangular projection. Virtual scene construction and camera image capturing simulation are based on the RflySim full version 3.07. Have fun :) 
+This repository provides:
+
+- A panoramic dataset for UAV global localization
+- A Python script to stitch four fisheye camera images into a seamless panoramic image based on polynomial fisheye distortion modeling and equirectangular projection.
+
+The dataset and images are generated from a virtual environment using **RflySim (version 3.07 full edition)**.
+
+📘 You can find detailed documentation for RflySim at:  
+👉 https://rflysim.com/doc/zh/
+
+Feel free to explore and have fun!
 
 ---
 
@@ -91,3 +101,18 @@ Ensure each timestamp has exactly four images and follow the naming conventions,
 The script supports batch processing and robust interpolation.
 
 You can adjust panorama resolution via the --pano_size parameter in the script.
+
+📦 A small demo dataset is available for download via Google Drive:
+
+👉 [Download demo panorama dataset (Google Drive)](https://drive.google.com/file/d/1tduZfmEj0t1jUEV401Rd64Ank1QgVlm-/view?usp=drive_link)
+👉 [Download demo fisheye dataset (Google Drive)](https://drive.google.com/file/d/1mcBSOLBNlwCNWw0UPQaiEn11kdygkzYD/view?usp=drive_link)
+
+
+This demo includes:
+- Raw fisheye images from four virtual cameras (`FisheyeView/sceneXX/seqXX/`)
+- Corresponding extrinsic parameters (`label_<timestamp>.txt`)
+- Precomputed panoramic images (`PanoramaView/sceneXX/seqXX/`)
+- Camera configuration info for each sequence (`cam_infos.txt`)
+
+You can use this dataset to directly test the stitching script or to verify results with the pre-generated panoramas.
+
