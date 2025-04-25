@@ -10,6 +10,10 @@ The dataset and images are generated from a virtual environment using **RflySim 
 📘 You can find detailed documentation for RflySim at:  
 👉 https://rflysim.com/doc/en/
 
+Below is an example of the stitched panoramic image from four fisheye inputs:
+
+![Panorama Example](assets/example_panorama.jpg)
+
 Feel free to explore and have fun!
 
 ---
