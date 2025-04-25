@@ -2,8 +2,8 @@
 
 This repository provides:
 
-- A Python script to stitch four fisheye camera images into a seamless panoramic image based on polynomial fisheye distortion modeling and equirectangular projection.
-- Panoramic datasets and fisheye datasets for UAV global localization
+- Panoramic datasets and fisheye datasets for UAV global localization.
+- A Python script to stitch four fisheye camera images into a seamless panoramic image based on polynomial fisheye distortion modeling and equirectangular projection from RflySim.
 
 The dataset and images are generated from a virtual environment using **RflySim (version 3.07 full edition)**.
 
@@ -104,8 +104,8 @@ You can adjust panorama resolution via the --pano_size parameter in the script.
 
 📦 A small demo dataset is available for download via Google Drive:
 
-👉 [Download demo panorama dataset (Google Drive)](https://drive.google.com/file/d/1tduZfmEj0t1jUEV401Rd64Ank1QgVlm-/view?usp=drive_link)
-👉 [Download demo fisheye dataset (Google Drive)](https://drive.google.com/file/d/1mcBSOLBNlwCNWw0UPQaiEn11kdygkzYD/view?usp=drive_link)
+👉 [Download demo panorama dataset (Google Drive)](https://drive.google.com/file/d/1tduZfmEj0t1jUEV401Rd64Ank1QgVlm-/view?usp=sharing)
+👉 [Download demo fisheye dataset (Google Drive)](https://drive.google.com/file/d/1mcBSOLBNlwCNWw0UPQaiEn11kdygkzYD/view?usp=sharing)
 
 
 This demo includes:
