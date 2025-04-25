@@ -1,7 +1,6 @@
 # Fisheye to Panorama with RflySim: Multi-Fisheye Image Stitching for Panoramic Vision
 
-This repository provides a Python script to stitch four fisheye camera images into a seamless
-image, based on polynomial fisheye distortion modeling and equirectangular projection. Virtual scene construction and camera image capturing simulation are based on the RflySim full version 3.07.
+This repository provides a Panoramic dataset for UAV localization and a Python script to stitch four fisheye camera images into a seamless image, based on polynomial fisheye distortion modeling and equirectangular projection. Virtual scene construction and camera image capturing simulation are based on the RflySim full version 3.07.
 
 ---
 
