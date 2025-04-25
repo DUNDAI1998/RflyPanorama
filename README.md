@@ -4,6 +4,7 @@ This repository provides:
 
 - Panoramic datasets and fisheye datasets for UAV global localization.
 - A Python script to stitch four fisheye camera images into a seamless panoramic image based on polynomial fisheye distortion modeling and equirectangular projection from RflySim.
+- Scripts to collect fisheye datasets from RflySim.
 
 The dataset and images are generated from a virtual environment using **RflySim (version 3.07 full edition)**.
 
@@ -26,15 +27,17 @@ The dataset is organized hierarchically and consists of two main folders:
 
 ### 🔹 `FisheyeView/sceneXX/seqXX/` – Input fisheye images and extrinsics
 
-🕜🔹 `img_0_<timestamp>.jpg`   — Front camera  
-🕜🔹 `img_1_<timestamp>.jpg`   — Right camera  
-🕜🔹 `img_2_<timestamp>.jpg`   — Rear camera  
-🕜🔹 `img_3_<timestamp>.jpg`   — Left camera  
+🕜🔹 `img_0_<timestamp>.jpg`   — Front-Right camera  
+🕜🔹 `img_1_<timestamp>.jpg`   — Rear-Right camera  
+🕜🔹 `img_2_<timestamp>.jpg`   — Rear-Left camera  
+🕜🔹 `img_3_<timestamp>.jpg`   — Front-Left camera  
 🕜📄 `label_<timestamp>.txt`   — Extrinsic parameters for this timestamp (e.g., relative camera poses)
 
 Each `seqXX` contains multiple image groups. A valid group consists of:
 - Four images with the same `<timestamp>`
 - One `label_<timestamp>.txt` describing extrinsics
+
+Details can be found [here](./PanoramaDataset/readme.md)
 
 ---
 
@@ -66,7 +69,7 @@ This describes both the **intrinsic** and **extrinsic** calibration of each fish
 img_<camera_id><timestamp>.jpg label<timestamp>.txt panorama_<timestamp>.jpg
 
 
-- `camera_id`: 0 = front, 1 = right, 2 = rear, 3 = left  
+- `camera_id`: 0 = front-right, 1 = rear-right, 2 = rear-left, 3 = front-left  
 - `timestamp`: Floating-point number with up to 6 decimal places (e.g., `1713947554.840796`)
 
 > The script will recursively process all `sceneXX/seqXX/` folders and output the results with matching structure and filenames.
@@ -74,9 +77,11 @@ img_<camera_id><timestamp>.jpg label<timestamp>.txt panorama_<timestamp>.jpg
 
 📜 Files
 
-fisheye_to_panorama.py – Main script for stitching four fisheye images into a panoramic image
+`fisheye_to_panorama.py` – Main script for stitching four fisheye images into a panoramic image
 
-fisheye_intrinsics.txt – Intrinsic parameters of the fisheye camera in polynomial form
+`fisheye_intrinsics.txt` – Intrinsic parameters of the fisheye camera in polynomial form
+
+`PanoramaDataset` - Folder containing scripts for dataset collection. Details can be found [here](./PanoramaDataset/readme.md)
 
 🔧 Camera Model
 
@@ -88,7 +93,7 @@ r(theta) = k0 * theta + k1 * theta^3 + k2 * theta^5 + k3 * theta^7
 
 Run the script:
 
-python fisheye_to_panorama.py --input_dir FisheyeView --output_dir PanoramaView
+`python fisheye_to_panorama.py --input_dir FisheyeView --output_dir PanoramaView`
 
 The script will automatically:
 
@@ -104,7 +109,7 @@ Ensure each timestamp has exactly four images and follow the naming conventions,
 
 The script supports batch processing and robust interpolation.
 
-You can adjust panorama resolution via the --pano_size parameter in the script.
+You can adjust panorama resolution via the `--pano_size parameter` in the script.
 
 📦 A small demo dataset is available for download via Google Drive:
 
