@@ -38,6 +38,7 @@ Each `seqXX` contains multiple image groups. A valid group consists of:
 - One `label_<timestamp>.txt` describing extrinsics
 
 Details can be found [here](./PanoramaDataset/readme.md)
+
 ---
 
 ### 🔹 `PanoramaView/sceneXX/seqXX/` – Output panoramic image and calibration info
