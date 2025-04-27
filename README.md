@@ -111,9 +111,10 @@ The script supports batch processing and robust interpolation.
 
 You can adjust panorama resolution via the `--pano_size parameter` in the script.
 
-📦 A small demo dataset is available for download via Google Drive:
+📦 A small demo dataset is available for downloading via Google Drive:
 
 👉 [Download demo panorama dataset (Google Drive)](https://drive.google.com/file/d/1tduZfmEj0t1jUEV401Rd64Ank1QgVlm-/view?usp=sharing)
+
 👉 [Download demo fisheye dataset (Google Drive)](https://drive.google.com/file/d/1mcBSOLBNlwCNWw0UPQaiEn11kdygkzYD/view?usp=sharing)
 
 
