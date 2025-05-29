@@ -15,9 +15,9 @@ import sys
 import os
 import time
 import cv2
-# import multiprocessing
+import numpy as np
 import json
-# from msvcrt import getch
+import math
 import subprocess
 
 # sensor
@@ -31,13 +31,15 @@ def change_scene(ind_scene):
     subprocess.run(['cmd.exe', '/c', path])
 ################# params setting #################################
 ind_scene = 2  # scene index
-ind_traj = 8   # trajectory index
+ind_traj =  11  # trajectory index
+num_cam = 4
+
 change_scene(ind_scene)
 time.sleep(100)  # wait for UE4 to load the scene
 
-num_cam = 4
 
-path = f'./dataset/scene{ind_scene:03}/traj{ind_traj:03}/'
+
+path = f'./fisheye_dataset/scene{ind_scene:03}/traj{ind_traj:03}/'
 if not os.path.exists(path):
     os.makedirs(path)
 
@@ -73,8 +75,6 @@ mav.initOffboard() # offboard
 mav.SendMavArm(True) # disarm
 
 
-# mav.SendPosNED(0,0,-25,0)
-# time.sleep(10)  # for the time to execute SendPosNED commands
 isSuss = vis.sendReqToUE4()  # send request to Rflysim3D
 if not isSuss:  
     print('The request for image capture failed.')
@@ -85,7 +85,7 @@ vis.startImgCap()  # after taking off
 def record_data(num_cam, interval_time, path):
     print('Start recording data...')
     while True:
-        start_time = time.time()
+        startTime = time.time()
 
         img_list = vis.Img
         img_flag_list = vis.hasData
@@ -94,70 +94,122 @@ def record_data(num_cam, interval_time, path):
         velx, vely, velz = mav.uavVelNED
         roll, pitch, yaw = mav.uavAngEular
         omegax, omegay, omegaz = mav.uavAngRate
-        lines_label_px4 = ''.join(f"{start_time:.6f} {posx:.4f} {posy:.4f} {posz:.4f} {velx:.4f} {vely:.4f} {velz:.4f} {roll:.4f} {pitch:.4f} {yaw:.4f} {omegax:.4f} {omegay:.4f} {omegaz:.4f}\n")
-        
-        with open(path + f'label_{start_time:.6f}.txt', 'w') as f:
+        lines_label_px4 = ''.join(f"{startTime:.6f} {posx:.4f} {posy:.4f} {posz:.4f} {velx:.4f} {vely:.4f} {velz:.4f} {roll:.4f} {pitch:.4f} {yaw:.4f} {omegax:.4f} {omegay:.4f} {omegaz:.4f}\n")
+
+        with open(path + f'label_{startTime:.6f}.txt', 'w') as f:
             f.writelines(lines_label_px4)
 
         for i in range(num_cam):
             if img_flag_list[i]:
                 img = img_list[i]
-                cv2.imwrite(path + f'img_{i}_{start_time:.6f}.jpg', img)  
+                cv2.imwrite(path + f'img_{i}_{startTime:.6f}.jpg', img)  
 
 
         end_time = time.time()
-        while end_time - start_time < interval_time:  # f Hz 
+        while end_time - startTime < interval_time:  # f Hz 
             end_time = time.time()
 
-# def control_traj():
-#     print('Start controlling the drone...')
-#     while True:
-#         ch = getch()
-#         if ch == b'w':
-#             print('forward')
-#             mav.SendVelNEDNoYaw(vx=8, vy=0, vz=0)  # forward
-#         elif ch == b's':
-#             print('backward')
-#             mav.SendVelNEDNoYaw(vx=-8, vy=0, vz=0)  # backward
-#         elif ch == b'a':
-#             print('left')
-#             mav.SendVelNEDNoYaw(vx=0, vy=-8, vz=0)  # left
-#         elif ch == b'd':
-#             print('right')
-#             mav.SendVelNEDNoYaw(vx=0, vy=8, vz=0)  # right
-#         elif ch == b' ':
-#             print('up')
-#             mav.SendVelNEDNoYaw(vx=0, vy=0, vz=-8)  # up
-#         elif ch == b'z':
-#             print('down')
-#             mav.SendVelNEDNoYaw(vx=0, vy=0, vz=8)  # down
-#         elif ch == b'q':
-#             print('right yaw')
-#             mav.SendAttPX4(att=[0,0,0.3], CtrlFlag=3)  # right yaw
-#         elif ch == b'e':
-#             print('left yaw')
-#             mav.SendAttPX4(att=[0,0,-0.3], CtrlFlag=3)  # left yaw
-#         elif ch == b'b':
-#             print('be still')
-#             mav.SendVelNEDNoYaw(vx=0, vy=0, vz=0)  # be still
-#             mav.SendAttPX4(att=[0,0,0], CtrlFlag=3)  # be still
-#         elif ch == b'r':
-#             print('stop moving')
-#             break
 
+def sendCarPosAng(ue,copterID,VehicleType,MotorRPMSMean,PosE,angEuler):
+    '''
+    send position and attitude of 8 cars
+    '''
+    row,col=PosE.shape
+    if col !=3:
+        return False
+    for i in range(row):
+        ue.sendUE4Pos2Ground(copterID[i].astype(int),VehicleType[i].astype(int),MotorRPMSMean[i].astype(int),PosE[i,:].tolist(),angEuler[i].tolist())
+
+def ctrl_moving_car(num_car=8):
+    '''
+    The initial position of 8 cars is set in scene002, i.e. OldFactory.
+    '''
+    copterID = np.zeros(num_car + 1)
+    for i in range(num_car):
+        copterID[i] = i + 1
+    VehicleType = np.array([310, 300051, 200051, 51, 51, 100051, 100051, 51, 100051])
+    MotorRPMSMean = np.zeros(num_car)
+    PosE = np.zeros((num_car, 3))
+    angEuler = np.zeros((num_car, 3))
+
+    time_interval = 0.02
+
+    startTime = time.time()
+    lastTime = time.time()
+    while True:
+        lastTime = lastTime + time_interval
+        sleep_time = lastTime - time.time()
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        else:
+            lastTime = time.time()
+
+        current_time = time.time() - startTime  # simulation time, same as clock in Simulink
+
+        # position of 8 cars   
+        Car1Const = np.array([60, -117, -1])     # initial position of car #1
+        slopeInput = np.array([current_time*1/15.0, 0, 0])
+        Car1SinInput = np.array([20*math.sin(0.2*current_time - math.pi/2) + 0, 0, 0])
+        Car1PosE = Car1Const + Car1SinInput + slopeInput
+        PosE[0, :] = Car1PosE
+        
+        Car2Const = np.array([30, -117, -1])
+        Car2PosE = Car2Const + slopeInput  
+        PosE[1, :] = Car2PosE
+        
+        Car3Const = np.array([15.7,-119,-1])
+        Car3SinInput = np.array([5*math.sin(0.3*current_time + math.pi/3) + 0, 0, 0])
+        Car3PosE = Car3Const + slopeInput + Car3SinInput
+        PosE[2, :] = Car3PosE
+        angEuler[2, :] = np.array([0, 0, 0])
+        
+        Car4Const = np.array([17.7, -115, -1]) 
+        Car4SinInput = np.array([5*math.sin(0.3*current_time + 0) + 0, 0, 0])
+        Car4PosE = Car4Const + slopeInput + Car4SinInput
+        PosE[3, :] = Car4PosE    
+        angEuler[3, :] = np.array([0, 0, 0])
+        
+        Car5Const = np.array([2, -119, -1])
+        Car5SinInput = Car3SinInput 
+        Car5PosE = Car5Const + slopeInput + Car5SinInput
+        PosE[4, :] = Car5PosE
+        angEuler[4, :] = np.array([0, 0, 0])   
+        
+        Car6Const = np.array([4, -115, -1]) 
+        Car6SinInput = Car4SinInput
+        Car6PosE = Car6Const + slopeInput + Car6SinInput
+        PosE[5, :] = Car6PosE
+        angEuler[5, :] = np.array([0, 0, 0])     
+        
+        Car7Const = np.array([-12, -117, -1]) 
+        Car7SinInput = np.array([5*math.sin(0.3*current_time + math.pi/6) + 0, 0, 0])
+        Car7PosE = Car7Const + slopeInput + Car7SinInput
+        PosE[6, :] = Car7PosE
+        angEuler[6, :] = np.array([0, 0, 0])       
+        
+        Car8Const = np.array([-24, -117, -1])
+        Car8SinInput = np.array([5*math.sin(0.3*current_time + math.pi/3.5) + 0, 0, 0])
+        Car8PosE = Car8Const + slopeInput + Car8SinInput
+        PosE[7, :] = Car8PosE
+        angEuler[7, :] = np.array([0, 0, 0]) 
+
+        sendCarPosAng(ue, copterID[1:], VehicleType, MotorRPMSMean, PosE, angEuler)  
 
 
 if __name__ == '__main__':
-    ################### get dataset ####################
-    # parallel processing
-    
-    # record_process = multiprocessing.Process(target=record_data, args=(num_cam, interval_time, path))
-    # control_process = multiprocessing.Process(target=control_traj, args=())
+    ################### collect dataset ####################
+    if ind_scene == 2:
+        print('Start moving cars and recording data...')
+        import threading
 
-    # record_process.start()
-    # control_process.start()
-    # record_process.join()
-    # control_process.join()
+        thread_moving = threading.Thread(target=ctrl_moving_car)
+        thread_recording = threading.Thread(target=record_data, args=(num_cam, interval_time, path))
 
-    # the control of trajectory can be done by QGC
-    record_data(num_cam, interval_time, path)
+        thread_moving.start()
+        thread_recording.start()
+
+        thread_moving.join()
+        thread_recording.join() 
+    else:
+        print("only record data....")
+        record_data(num_cam, interval_time, path)

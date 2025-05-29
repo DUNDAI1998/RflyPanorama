@@ -125,3 +125,6 @@ This demo includes:
 
 You can use this dataset to directly test the stitching script or to verify results with the pre-generated panoramas.
 
+## ⚠️  Acknowledgements
+1. Scene001 ~ Scene003 of the dataset are default scenes in RflySim.
+2. Other scenes are downloaded and cooked from [FAB](https://www.fab.com/zh-cn).

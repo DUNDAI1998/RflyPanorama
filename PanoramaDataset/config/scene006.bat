@@ -11,28 +11,15 @@ if not defined PSP_PATH (
     SET PSP_PATH_LINUX=/mnt/d/PX4PSP
 )
 
-echo With this SIL script, you can initialize your vehicle(s) anywhere you want
-echo Please enter the x, y position (unit m) and yaw angle list with the separator ','
-echo For example, PosX list:1.1,2.2 and PosY list:0,0 and Yaw:0,0 will create two vehicles.
-REM Set Copters' x&y Position vector on the map
-REM SET /P PosXStr=Please enter the PosX (m) list:
-REM SET /P PosYStr=Please enter the PosY (m) list:
-REM SET /P YawStr=Please enter the Yaw (degree) list:
-
-REM Change initial position of vehicle 
-SET PosXStr=100
-SET PosYStr=50
-SET YawStr=0
-
 REM Start index of vehicle number (should larger than 0)
 REM This option is useful for simulation with multi-computers
 SET /a START_INDEX=1
 
-@REM REM Total vehicle Number to auto arrange position
-@REM SET /a TOTOAL_COPTER=9
+REM Total vehicle Number to auto arrange position
+REM SET /a TOTOAL_COPTER=8
 
 REM Set the vehicleType/ClassID of vehicle 3D display in RflySim3D
-SET /a CLASS_3D_ID=310
+SET /a CLASS_3D_ID=-1
 
 REM Set use DLL model name or not, use number index or name string
 REM This option is useful for simulation with other types of vehicles instead of multicopters
@@ -42,7 +29,7 @@ REM Check if DLLModel is a name string, if yes, copy the DLL file to CopterSim f
 SET /A DLLModelVal=DLLModel
 if %DLLModelVal% NEQ %DLLModel% (
     REM Copy the latest dll file to CopterSim folder
-    copy /Y "%~dp0"\%DLLModel%.dll %PSP_PATH%\CopterSim\external\model\%DLLModel%.dll
+    copy /Y %~dp0\%DLLModel%.dll %PSP_PATH%\CopterSim\external\model\%DLLModel%.dll
 )
 
 REM Set the simulation mode on CopterSim, use number index or name string
@@ -54,20 +41,21 @@ REM Check folder Firmware\ROMFS\px4fmu_common\init.d-posix for supported airfram
 REM E.g., fixed-wing aircraft: PX4SitlFrame=plane; small cars: PX4SitlFrame=rover
 set PX4SitlFrame=iris
 
+
 REM Set the map, use index or name of the map on CopterSim
 REM e.g., UE4_MAP=1 equals to UE4_MAP=Grasslands
-SET UE4_MAP=OldFactory
+SET UE4_MAP=CIty
 
 REM Set the origin x,y position (m) and yaw angle (degree) at the map
-SET /a ORIGIN_POS_X=470
-SET /a ORIGIN_POS_Y=180
+SET /a ORIGIN_POS_X=10
+SET /a ORIGIN_POS_Y=10
 SET /a ORIGIN_YAW=0
 
-REM Set the interval between two vehicle, unit:m 
+REM Set the interval between two vehicle, unit:m
 SET /a VEHICLE_INTERVAL=2
 
 
-REM Set broadcast to other computer; IS_BROADCAST=0: only this computer, IS_BROADCAST=1: broadcast; 
+REM Set broadcast to other computer; IS_BROADCAST=0: only this computer, IS_BROADCAST=1: broadcast;
 REM or use IP address to increase speed, e.g., IS_BROADCAST=192.168.3.1
 REM Note: in IP mode, IS_BROADCAST=0 equals to IS_BROADCAST=127.0.0.1, IS_BROADCAST=1 equals to IS_BROADCAST=255.255.255.255
 REM You can also use a IP list with seperator "," or ";" to specify IPs to send, e.g., 127.0.0.1,192.168.1.4,192.168.1.5
@@ -78,15 +66,55 @@ REM 4:Mavlink_NoSend, 5:Mavlink_NoGPS, 6:Mavlink_Vision (NoGPS and set PX4 EKF)
 SET UDPSIMMODE=2
 
 
+:Top
+ECHO.
+ECHO ---------------------------------------
+REM Max vehicle number 50
+SET /a MAX_VEHICLE=50
+SET /P VehicleNum=Please input UAV swarm number:
+SET /A Evaluated=VehicleNum
+if %Evaluated% EQU %VehicleNum% (
+    IF %VehicleNum% GTR 0 (
+        IF %VehicleNum% GTR %MAX_VEHICLE% (
+            ECHO The vehicle number is too large, which may cause a crash
+            pause
+        )
+        GOTO StartSim
+    )
+    ECHO Not a positive integer
+    GOTO Top
+) ELSE (
+    ECHO Not a integer
+    GOTO Top
+)
+:StartSim
+
+SET /A VehicleTotalNum=%VehicleNum% + %START_INDEX% - 1
+if not defined TOTOAL_COPTER (
+    SET /A TOTOAL_COPTER=%VehicleTotalNum%
+)
+
+set /a sqrtNum=1
+set /a squareNum=1
+:loopSqrt
+set /a squareNum=%sqrtNum% * %sqrtNum%
+if %squareNum% EQU %TOTOAL_COPTER% (
+    goto loopSqrtEnd
+)
+if %squareNum% GTR %TOTOAL_COPTER% (
+    goto loopSqrtEnd
+)
+set /a sqrtNum=%sqrtNum%+1
+goto loopSqrt
+:loopSqrtEnd
+
+
 REM QGCPath
-tasklist|find /i "QGroundControl.exe" || start %PSP_PATH%\QGroundControl\QGroundControl.exe -noComPix
+tasklist|find /i "QGroundControl.exe" || start %PSP_PATH%\QGroundControl\QGroundControl.exe
 ECHO Start QGroundControl
 
 REM UE4Path
-@REM cd /d %PSP_PATH%\RflySimUE5
-@REM tasklist|find /i "RflySim3D.exe" || start %PSP_PATH%\RflySimUE5\RflySim3D.exe
-cd /d %PSP_PATH%\RflySim3D
-tasklist|find /i "RflySim3D.exe" || start %PSP_PATH%\RflySim3D\RflySim3D.exe
+tasklist|find /i "RflySim3D.exe" || start %PSP_PATH%\RflySimUE5\RflySim3D.exe
 choice /t 5 /d y /n >nul
 
 
@@ -99,45 +127,16 @@ cd /d %PSP_PATH%\CopterSim
 
 
 set /a cntr=%START_INDEX%
-
-SET string=%PosXStr%
-SET stringY=%PosYStr%
-SET stringYaw=%YawStr%
-:MYSPLIT
-    for /f "tokens=1,* delims=," %%i in ("%string%") do (
-        set xPos=%%i
-        set string=%%j
-    )
-    for /f "tokens=1,* delims=," %%i in ("%stringY%") do (
-        set yPos=%%i
-        set stringY=%%j
-    )
-
-    for /f "tokens=1,* delims=," %%i in ("%stringYaw%") do (
-        set yawAng=%%i
-        set stringYaw=%%j
-    )
-
-    REM echo start CopterSim
-    start /realtime CopterSim.exe 1 %cntr% %CLASS_3D_ID% %DLLModel% %SimMode% %UE4_MAP% %IS_BROADCAST% %xPos% %yPos% %yawAng% 1 %UDPSIMMODE%
-    ECHO start Copter #%cntr%
-    choice /t 1 /d y /n >nul
-    set /a cntr=%cntr%+1
-    
-    REM TIMEOUT /T 1
-    if not "%string%"=="" (
-        if "%stringY%"=="" (
-            tasklist|find /i "CopterSim.exe" && taskkill /im "CopterSim.exe"
-            tasklist|find /i "QGroundControl.exe" && taskkill /f /im "QGroundControl.exe"
-            tasklist|find /i "RflySim3D.exe" && taskkill /f /im "RflySim3D.exe"
-            ECHO Error: The dimensions of PosXStr and PosYStr are not equal            
-            pause
-            goto ErrorPoint
-        )
-    )
-if not "%string%"=="" goto MYSPLIT
-set /a VehicleNum=%cntr%-%START_INDEX%
-
+set /a endNum=%VehicleTotalNum%+1
+:loopBegin
+set /a PosXX=((%cntr%-1) / %sqrtNum%)*%VEHICLE_INTERVAL% + %ORIGIN_POS_X%
+set /a PosYY=((%cntr%-1) %% %sqrtNum%)*%VEHICLE_INTERVAL% + %ORIGIN_POS_Y%
+start /realtime CopterSim.exe 1 %cntr% %CLASS_3D_ID% %DLLModel% %SimMode% %UE4_MAP% %IS_BROADCAST% %PosXX% %PosYY% %ORIGIN_YAW% 1 %UDPSIMMODE%
+choice /t 1 /d y /n >nul
+set /a cntr=%cntr%+1
+if %cntr% EQU %endNum% goto loopEnd
+goto loopBegin
+:loopEnd
 
 REM Set ToolChainType 1:Win10WSL 3:Cygwin
 SET /a ToolChainType=1
