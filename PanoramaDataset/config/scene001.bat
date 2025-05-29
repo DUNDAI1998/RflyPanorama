@@ -56,7 +56,7 @@ set PX4SitlFrame=iris
 
 REM Set the map, use index or name of the map on CopterSim
 REM e.g., UE4_MAP=1 equals to UE4_MAP=Grasslands
-SET UE4_MAP=Grasslands
+SET UE4_MAP=DesertTown
 
 REM Set the origin x,y position (m) and yaw angle (degree) at the map
 SET /a ORIGIN_POS_X=470
